@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -94,7 +95,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
     //slide
     private DcMotorEx slideMotorLeft;
-    private DcMotorEx slideMotorLeftRight;
+    private DcMotorEx slideMotorRight;
     //fourbar
     private DcMotorEx fourBarLeft;
     private DcMotorEx fourBarRight;
@@ -195,7 +196,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
             slideMoving = false;
 
         slideMotorLeft.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
-        slideMotorLeftRight.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
+        slideMotorRight.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
 
 
     }
@@ -208,6 +209,11 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     public void intakeOut(double power) {
         intakeLeft.setPower(-power);
         intakeRight.setPower(-power);
+    }
+
+    public void slideMotorTargetPosition(double target) {
+        slideMotorLeft.setTargetPosition((int) target);
+        slideMotorRight.setTargetPosition((int) target);
     }
 
 
@@ -228,7 +234,6 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         //TODO organize
         //setup driving motors
 
-
         //armMotor encoders
         slideMotorLeft = hardwareMap.get(DcMotorEx.class, "slideMotorLeft");
 //        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -236,6 +241,28 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         slideMotorLeft.setVelocity(0);
         slideMotorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         slideMotorLeft.setDirection(DcMotorEx.Direction.REVERSE);
+
+        slideMotorRight = hardwareMap.get(DcMotorEx.class, "slideMotorRight");
+//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotorRight.setTargetPosition(0);
+        slideMotorRight.setVelocity(0);
+        slideMotorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        slideMotorRight.setDirection(DcMotorEx.Direction.REVERSE);
+
+        fourBarLeft = hardwareMap.get(DcMotorEx.class, "fourBarLeft");
+//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        fourBarLeft.setTargetPosition(0);
+        fourBarLeft.setVelocity(0);
+        fourBarLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        fourBarLeft.setDirection(DcMotorEx.Direction.REVERSE);
+
+        fourBarRight = hardwareMap.get(DcMotorEx.class, "fourBarRight");
+//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        fourBarRight.setTargetPosition(0);
+        fourBarRight.setVelocity(0);
+        fourBarRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        fourBarRight.setDirection(DcMotorEx.Direction.FORWARD);
+
 
 
         intakeLeft = hardwareMap.get(CRServo.class, "intakeLeft");
