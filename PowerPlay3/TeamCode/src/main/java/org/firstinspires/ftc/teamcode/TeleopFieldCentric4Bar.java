@@ -1,5 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.DEFAULTSLIDEPOS;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTION;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTION;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTION;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.intakeLeft;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.intakeRight;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorLeft;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorRight;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -8,10 +17,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.RRdrive.SampleMecanumDrive;
 
 /**
  * This opmode demonstrates how one would implement field centric control using
@@ -36,6 +44,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     private final double maxSlideVelocity = wheelMotorRPM * wheelMotorTicks / 60;
     private final double spinnyTicks = 537.7;
     private final double maxSpinnyVelocity = 312 * spinnyTicks / 60;
+
+    private int slidePositionCurrent = 0;
 
 
     //gear change variables
@@ -72,11 +82,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     boolean slideMoving = false;
 
 
-    private double GROUNDJUNCTION = 0;
-    private double LOWJUNCTION = 1211;
-    private double MIDDLEJUNCTION = 2085;
-    private double HIGHJUNCTION = 2893;
-    int slidePositionCurrent = 0;
+ 
 
 
     //create general variables
@@ -89,19 +95,9 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     private ElapsedTime autoIntakeTime = new ElapsedTime();
 
 
+    HardwareMapMech robot = new HardwareMapMech();
 
-
-    //create motor and servo objects
-
-    //slide
-    private DcMotorEx slideMotorLeft;
-    private DcMotorEx slideMotorRight;
-    //fourbar
-    private DcMotorEx fourBarLeft;
-    private DcMotorEx fourBarRight;
-    //intake
-    private CRServo intakeLeft;
-    private CRServo intakeRight;
+    
 
 
 
@@ -234,43 +230,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         //TODO organize
         //setup driving motors
 
-        //armMotor encoders
-        slideMotorLeft = hardwareMap.get(DcMotorEx.class, "slideMotorLeft");
-//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slideMotorLeft.setTargetPosition(0);
-        slideMotorLeft.setVelocity(0);
-        slideMotorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        slideMotorLeft.setDirection(DcMotorEx.Direction.REVERSE);
-
-        slideMotorRight = hardwareMap.get(DcMotorEx.class, "slideMotorRight");
-//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slideMotorRight.setTargetPosition(0);
-        slideMotorRight.setVelocity(0);
-        slideMotorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        slideMotorRight.setDirection(DcMotorEx.Direction.REVERSE);
-
-        fourBarLeft = hardwareMap.get(DcMotorEx.class, "fourBarLeft");
-//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        fourBarLeft.setTargetPosition(0);
-        fourBarLeft.setVelocity(0);
-        fourBarLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        fourBarLeft.setDirection(DcMotorEx.Direction.REVERSE);
-
-        fourBarRight = hardwareMap.get(DcMotorEx.class, "fourBarRight");
-//        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        fourBarRight.setTargetPosition(0);
-        fourBarRight.setVelocity(0);
-        fourBarRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        fourBarRight.setDirection(DcMotorEx.Direction.FORWARD);
-
-
-
-        intakeLeft = hardwareMap.get(CRServo.class, "intakeLeft");
-        intakeRight = hardwareMap.get(CRServo.class, "intakeRight");
-        intakeRight.setDirection(CRServo.Direction.REVERSE);
-
-//        color = hardwareMap.colorSensor.get("color");
-
+        robot.init(hardwareMap);
 
 
 
@@ -278,6 +238,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
 
         slideMotorLeft.setVelocity(maxSlideVelocity);
+        slideMotorRight.setVelocity(maxSlideVelocity);
 
         if (isStopRequested()) return;
 
@@ -337,20 +298,20 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                 case DEFAULT_POSITION:
 
                     slideMotorLeft.setVelocity(maxSlideVelocity);
-                    slideMotorLeft.setTargetPosition(403);
+                    slideMotorLeft.setTargetPosition(DEFAULTSLIDEPOS);
 
                     if (gamepad2.triangle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                        slidePositionCurrent = (int) HIGHJUNCTION;
+                        slidePositionCurrent = HIGHJUNCTION;
                     } else if (gamepad2.circle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                        slidePositionCurrent = (int) MIDDLEJUNCTION;
+                        slidePositionCurrent = MIDDLEJUNCTION;
                     } else if (gamepad2.cross && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.LOW_JUNCTION;
-                        slidePositionCurrent = (int) LOWJUNCTION;
+                        slidePositionCurrent = LOWJUNCTION;
                     } else if (gamepad2.right_bumper && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.INITIAL_GRAB;
@@ -381,7 +342,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             intakeIn(.05);
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         }
                     }
 
@@ -425,7 +386,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         intakeIn(0);
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                        slidePositionCurrent = 403;
+                        slidePositionCurrent = DEFAULTSLIDEPOS;
                     }
                     else if (gamepad2.right_bumper) {
                         autoIntakeTime.reset();
@@ -442,7 +403,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                     } else if (!gamepad1.left_bumper) {
                         intakeOut(0.05);
                         autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                        slidePositionCurrent = 403;
+                        slidePositionCurrent = DEFAULTSLIDEPOS;
                     }
 
                 case DROP_STACKED:
@@ -468,15 +429,15 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = (int) MIDDLEJUNCTION;
+                            slidePositionCurrent = MIDDLEJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = (int) LOWJUNCTION;
+                            slidePositionCurrent = LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP_STACKED;
@@ -487,7 +448,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = (int) HIGHJUNCTION;
+                            slidePositionCurrent = HIGHJUNCTION;
                         }
                     }
 
@@ -496,7 +457,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
 
                 case HIGH_JUNCTION:
-                    slideMotorLeft.setTargetPosition((int) HIGHJUNCTION);
+                    slideMotorLeft.setTargetPosition(HIGHJUNCTION);
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -505,15 +466,15 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = (int) MIDDLEJUNCTION;
+                            slidePositionCurrent = MIDDLEJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = (int) LOWJUNCTION;
+                            slidePositionCurrent = LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -527,7 +488,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                     break;
 
                 case MIDDLE_JUNCTION:
-                    slideMotorLeft.setTargetPosition((int) MIDDLEJUNCTION);
+                    slideMotorLeft.setTargetPosition(MIDDLEJUNCTION);
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -536,15 +497,15 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = (int) HIGHJUNCTION;
+                            slidePositionCurrent = HIGHJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = (int) LOWJUNCTION;
+                            slidePositionCurrent = LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -558,7 +519,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                     break;
 
                 case LOW_JUNCTION:
-                    slideMotorLeft.setTargetPosition((int) LOWJUNCTION);
+                    slideMotorLeft.setTargetPosition(LOWJUNCTION);
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -567,15 +528,15 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = (int) MIDDLEJUNCTION;
+                            slidePositionCurrent = MIDDLEJUNCTION;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = (int) HIGHJUNCTION;
+                            slidePositionCurrent = HIGHJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -598,15 +559,15 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
-                            slidePositionCurrent = 403;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = (int) MIDDLEJUNCTION;
+                            slidePositionCurrent = MIDDLEJUNCTION;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = (int) HIGHJUNCTION;
+                            slidePositionCurrent = HIGHJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;

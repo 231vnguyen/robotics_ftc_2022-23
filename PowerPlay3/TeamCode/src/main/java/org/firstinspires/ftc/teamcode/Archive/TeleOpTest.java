@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode.Archive;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//88@Disabled
-@TeleOp(name = "Slide/Servo Position Test", group = "Testing")
+@Disabled
+@TeleOp(name = "aSlide/Servo Position Test", group = "Testing")
 
 
 public class TeleOpTest extends LinearOpMode {
