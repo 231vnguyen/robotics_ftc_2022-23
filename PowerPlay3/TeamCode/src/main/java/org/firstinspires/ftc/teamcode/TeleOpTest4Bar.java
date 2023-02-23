@@ -80,8 +80,8 @@ public class TeleOpTest4Bar extends LinearOpMode {
     private int fourBarPosition = 0;
     boolean fourBarMoving = false;
     private final double[] fourBarValues = {
-            0, .1, .2, .3, .4,  .5, .6, .7, .85, .9, 1, 1.1, 1.2, 1.3, 1.4
-            , 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7,
+            0, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95,
+            1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7,
             2.8, 2.9, 3.0, 3.1
     };
 
@@ -217,8 +217,8 @@ public class TeleOpTest4Bar extends LinearOpMode {
         } else if (!gamepad1.dpad_up && !gamepad1.dpad_down && fourBarMoving)
             fourBarMoving = false;
 
-        slideMotorLeft.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxSlideTicks));
-        slideMotorRight.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxSlideTicks));
+        fourBarLeft.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxFourBarTicks));
+        fourBarRight.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxFourBarTicks));
 
 
     }
