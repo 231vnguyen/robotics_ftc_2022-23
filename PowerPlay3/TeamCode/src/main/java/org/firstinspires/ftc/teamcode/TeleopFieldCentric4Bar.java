@@ -1,14 +1,30 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.DEFAULTFOURBARPOS;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.DEFAULTSLIDEPOS;
-import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTION;
-import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTION;
-import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTION;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.FOURBAROUT;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.FOURBARUSIDE;
+
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTIONSLIDEOUT;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTIONSLIDEU;
+
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTIONSLIDEOUT;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTIONSLIDEU;
+
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTIONSLIDEOUT;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTIONSLIDEU;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.STACK;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.fourBarLeft;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.fourBarRight;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.intakeLeft;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.intakeRight;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.powerVariable;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorLeft;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorRight;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.target;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -29,7 +45,7 @@ import org.firstinspires.ftc.teamcode.RRdrive.SampleMecanumDrive;
  * <p>
  * See lines 42-57.
  */
-@Disabled
+
 @TeleOp(group = "advanced")
 public class TeleopFieldCentric4Bar extends LinearOpMode {
 
@@ -44,7 +60,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     private final double maxSlideVelocity = wheelMotorRPM * wheelMotorTicks / 60;
     private final double spinnyTicks = 537.7;
     private final double maxSpinnyVelocity = 312 * spinnyTicks / 60;
-
+ 
     private int slidePositionCurrent = 0;
 
 
@@ -116,11 +132,16 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         DROP_DEFAULT,
         DROP_STACKED,
         MOVEAWAY,
-        HIGH_JUNCTION,
-        MIDDLE_JUNCTION,
-        LOW_JUNCTION,
-        GROUND_JUNCTION,
-        STACK_POSITION
+        HIGH_JUNCTION_INTAKE,
+        MIDDLE_JUNCTION_INTAKE,
+        LOW_JUNCTION_INTAKE,
+        GROUND_JUNCTION_INTAKE,
+        STACK_POSITION_INTAKE,
+        HIGH_JUNCTION_OUTTAKE,
+        MIDDLE_JUNCTION_OUTTAKE,
+        LOW_JUNCTION_OUTTAKE,
+        STACK_POSITION_OUTTAKE,
+
 
     }
 
@@ -218,6 +239,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         // Initialize SampleMecanumDrive
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
         // We want to turn off velocity control for teleop
         // Velocity control per wheel is not necessary outside of motion profiled auto
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -293,34 +316,58 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
             //TODO Gamepad 2
 
-
+            //finite statemachines
             switch (autointakeState) {
                 case DEFAULT_POSITION:
 
                     slideMotorLeft.setVelocity(maxSlideVelocity);
+                    slideMotorRight.setVelocity(maxSlideVelocity);
                     slideMotorLeft.setTargetPosition(DEFAULTSLIDEPOS);
+                    slideMotorRight.setTargetPosition(DEFAULTSLIDEPOS);
 
+
+                    fourBarLeft.setVelocity(maxSlideVelocity * powerVariable);
+                    fourBarRight.setVelocity(maxSlideVelocity * powerVariable);
+                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
+
+
+                    //Fourbar for u side
                     if (gamepad2.triangle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                        slidePositionCurrent = HIGHJUNCTION;
+                        autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                        slidePositionCurrent = HIGHJUNCTIONSLIDEU;
                     } else if (gamepad2.circle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                        slidePositionCurrent = MIDDLEJUNCTION;
+                        autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                        slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
                     } else if (gamepad2.cross && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.LOW_JUNCTION;
-                        slidePositionCurrent = LOWJUNCTION;
+                        autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                        slidePositionCurrent = LOWJUNCTIONSLIDEU;
                     } else if (gamepad2.right_bumper && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.INITIAL_GRAB;
                     } else if (gamepad2.square && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.STACK_POSITION;
+                        autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
                     } else if (gamepad1.left_bumper) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.DROP;
+                    }
+                    //Fourbar for other side
+                    else if (gamepad2.dpad_up && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
+                        autoIntakeTime.reset();
+                        autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                        slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                    } else if (gamepad2.dpad_left && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
+                        autoIntakeTime.reset();
+                        autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                        slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                    } else if (gamepad2.dpad_down && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
+                        autoIntakeTime.reset();
+                        autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                        slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                     }
 
 
@@ -328,7 +375,10 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
                 case INITIAL_GRAB:
 
+                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
                     slideMotorLeft.setTargetPosition(0);
+                    slideMotorRight.setTargetPosition(0);
                     intakeIn(1);
                     if (gamepad2.right_bumper) {
 
@@ -350,7 +400,10 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
                 case INITIAL_GRAB_STACK:
 
+                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
                     slideMotorLeft.setTargetPosition(0);
+                    slideMotorRight.setTargetPosition(0);
                     intakeIn(1);
 
                     if (gamepad2.right_bumper) {
@@ -358,6 +411,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         autoIntakeTime.reset();
                     } else if (!gamepad2.right_bumper) {
                         slideMotorLeft.setVelocity(maxSlideVelocity);
+                        slideMotorRight.setVelocity(maxSlideVelocity);
+
 
 //                        if (autoIntakeTime.seconds() < .1) {
 //                            intakeOut(.5);
@@ -365,7 +420,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 //                        } else if (autoIntakeTime.seconds() > .1) {
                             intakeIn(0);
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.STACK_POSITION;
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
 //                        }
                     }
 
@@ -376,10 +431,14 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                     if (gamepad1.left_bumper) {
                         intakeOut(.6);
                         slideMotorLeft.setTargetPosition(slidePositionCurrent - 300);
+                        slideMotorRight.setTargetPosition(slidePositionCurrent - 300);
+
 
                     } else if (!gamepad1.left_bumper) {
                         intakeOut(0);
                         slideMotorLeft.setTargetPosition(slidePositionCurrent + 300);
+                        slideMotorRight.setTargetPosition(slidePositionCurrent + 300);
+
                     }
 
                     if (gamepad1.ps | gamepad2.ps) {
@@ -412,15 +471,16 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         intakeOut(.6);
                     } else if (!gamepad1.left_bumper) {
                         intakeOut(0.05);
-                        autointakeState = AutoIntakeState.STACK_POSITION;
+                        autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
                     }
 
 
                     break;
 
 
-                case STACK_POSITION:
-                    slideMotorLeft.setTargetPosition(807);
+                case STACK_POSITION_INTAKE:
+                    slideMotorLeft.setTargetPosition(STACK);
+                    slideMotorRight.setTargetPosition(STACK);
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -432,12 +492,12 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = MIDDLEJUNCTION;
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = LOWJUNCTION;
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP_STACKED;
@@ -445,10 +505,23 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.INITIAL_GRAB_STACK;
                             slideMotorLeft.setVelocity(maxSlideVelocity * .5);
+                            slideMotorRight.setVelocity(maxSlideVelocity * .5);
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = HIGHJUNCTION;
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                         }
                     }
 
@@ -456,8 +529,11 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                     break;
 
 
-                case HIGH_JUNCTION:
-                    slideMotorLeft.setTargetPosition(HIGHJUNCTION);
+                case HIGH_JUNCTION_INTAKE:
+                    slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU);
+                    slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU);
+                    fourBarLeft.setTargetPosition(FOURBARUSIDE);
+                    fourBarRight.setTargetPosition(FOURBARUSIDE);
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -469,26 +545,42 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = MIDDLEJUNCTION;
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = LOWJUNCTION;
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
                         } else if (gamepad2.square) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.STACK_POSITION;
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                         }
                     }
 
 
                     break;
 
-                case MIDDLE_JUNCTION:
-                    slideMotorLeft.setTargetPosition(MIDDLEJUNCTION);
+                case MIDDLE_JUNCTION_INTAKE:
+                    slideMotorLeft.setTargetPosition(MIDDLEJUNCTIONSLIDEU);
+                    slideMotorRight.setTargetPosition(MIDDLEJUNCTIONSLIDEU);
+                    fourBarLeft.setTargetPosition(FOURBARUSIDE);
+                    fourBarRight.setTargetPosition(FOURBARUSIDE);
+
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -500,26 +592,42 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = HIGHJUNCTION;
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.LOW_JUNCTION;
-                            slidePositionCurrent = LOWJUNCTION;
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
                         } else if (gamepad2.square) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.STACK_POSITION;
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                         }
                     }
 
 
                     break;
 
-                case LOW_JUNCTION:
-                    slideMotorLeft.setTargetPosition(LOWJUNCTION);
+                case LOW_JUNCTION_INTAKE:
+                    slideMotorLeft.setTargetPosition(LOWJUNCTIONSLIDEU);
+                    slideMotorRight.setTargetPosition(LOWJUNCTIONSLIDEU);
+                    fourBarLeft.setTargetPosition(FOURBARUSIDE);
+                    fourBarRight.setTargetPosition(FOURBARUSIDE);
+
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
@@ -531,28 +639,41 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             slidePositionCurrent = DEFAULTSLIDEPOS;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = MIDDLEJUNCTION;
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = HIGHJUNCTION;
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
                         } else if (gamepad2.square) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.STACK_POSITION;
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                         }
                     }
 
 
                     break;
-
-                case GROUND_JUNCTION:
-
-                    slideMotorLeft.setTargetPosition(134);
-                    intakeIn(.1);
+                case HIGH_JUNCTION_OUTTAKE:
+                    slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEOUT);
+                    slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEOUT);
+                    fourBarLeft.setTargetPosition(FOURBAROUT);
+                    fourBarRight.setTargetPosition(FOURBAROUT);
+                    intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
 
@@ -560,24 +681,132 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
                             slidePositionCurrent = DEFAULTSLIDEPOS;
-                        } else if (gamepad2.circle) {
-                            autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
-                            slidePositionCurrent = MIDDLEJUNCTION;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.HIGH_JUNCTION;
-                            slidePositionCurrent = HIGHJUNCTION;
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
+                        } else if (gamepad2.circle) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
+                        } else if (gamepad2.cross) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
                         } else if (gamepad2.square) {
                             autoIntakeTime.reset();
-                            autointakeState = AutoIntakeState.STACK_POSITION;
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
                         }
                     }
 
+
                     break;
+
+                case MIDDLE_JUNCTION_OUTTAKE:
+                    slideMotorLeft.setTargetPosition(MIDDLEJUNCTIONSLIDEOUT);
+                    slideMotorRight.setTargetPosition(MIDDLEJUNCTIONSLIDEOUT);
+                    fourBarLeft.setTargetPosition(FOURBAROUT);
+                    fourBarRight.setTargetPosition(FOURBAROUT);
+
+                    intakeIn(.05);
+
+                    if (autoIntakeTime.seconds() > .1) {
+
+
+                        if (gamepad1.ps | gamepad2.ps) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
+                        } else if (gamepad2.triangle) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
+                        } else if (gamepad2.circle) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
+                        } else if (gamepad2.cross) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
+                        } else if (gamepad1.left_bumper) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.DROP;
+                        } else if (gamepad2.square) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_down) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEOUT;
+                        }
+                    }
+
+
+                    break;
+
+                case LOW_JUNCTION_OUTTAKE:
+                    slideMotorLeft.setTargetPosition(LOWJUNCTIONSLIDEOUT);
+                    slideMotorRight.setTargetPosition(LOWJUNCTIONSLIDEOUT);
+                    fourBarLeft.setTargetPosition(FOURBAROUT);
+                    fourBarRight.setTargetPosition(FOURBAROUT);
+
+                    intakeIn(.05);
+
+                    if (autoIntakeTime.seconds() > .1) {
+
+
+                        if (gamepad1.ps | gamepad2.ps) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = DEFAULTSLIDEPOS;
+                        } else if (gamepad2.triangle) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_INTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEU;
+                        } else if (gamepad2.circle) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_INTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEU;
+                        } else if (gamepad2.cross) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.LOW_JUNCTION_INTAKE;
+                            slidePositionCurrent = LOWJUNCTIONSLIDEU;
+                        } else if (gamepad1.left_bumper) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.DROP;
+                        } else if (gamepad2.square) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
+                        } else if (gamepad2.dpad_up) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.HIGH_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = HIGHJUNCTIONSLIDEOUT;
+                        } else if (gamepad2.dpad_left) {
+                            autoIntakeTime.reset();
+                            autointakeState = AutoIntakeState.MIDDLE_JUNCTION_OUTTAKE;
+                            slidePositionCurrent = MIDDLEJUNCTIONSLIDEOUT;
+                        }
+                    }
+
+
+                    break;
+
 
             }
 
@@ -587,7 +816,10 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
             // Print pose to telemetry
             telemetry.addData("State:", autointakeState);
             telemetry.addData("Slide Position:", slidePosition);
-            telemetry.addData("Slide Ticks", slideMotorLeft.getTargetPosition());
+            telemetry.addData("Left Slide Target ", slideMotorLeft.getTargetPosition());
+            telemetry.addData("Left Slide Current", slideMotorLeft.getCurrentPosition());
+            telemetry.addData("Right Slide Target ", slideMotorRight.getTargetPosition());
+            telemetry.addData("Right Slide Current", slideMotorRight.getCurrentPosition());
             telemetry.addData("Slide Value", slideValues[slidePosition]);
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());

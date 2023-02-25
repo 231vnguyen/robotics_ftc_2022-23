@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Archive;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -19,7 +20,7 @@ import org.firstinspires.ftc.teamcode.RRdrive.SampleMecanumDrive;
  * <p>
  * See lines 42-57.
  */
-
+@Disabled
 @TeleOp(group = "advanced")
 public class TeleopFieldCentric extends LinearOpMode {
 

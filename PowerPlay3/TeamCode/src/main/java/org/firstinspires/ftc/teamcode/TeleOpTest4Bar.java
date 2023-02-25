@@ -102,7 +102,6 @@ public class TeleOpTest4Bar extends LinearOpMode {
     private DcMotor frMotor;
     private DcMotor blMotor;
     private DcMotor brMotor;
-    private DcMotor testMotor;
 
 
 
@@ -236,7 +235,6 @@ public class TeleOpTest4Bar extends LinearOpMode {
         frMotor = hardwareMap.get(DcMotor.class, "frMotor");
         blMotor = hardwareMap.get(DcMotor.class, "blMotor");
         brMotor = hardwareMap.get(DcMotor.class, "brMotor");
-        testMotor = hardwareMap.get(DcMotor.class, "testMotor");
 
 
 
@@ -315,7 +313,7 @@ public class TeleOpTest4Bar extends LinearOpMode {
                 brMotor.setPower(0);
             }
 
-            testMotor.setPower(gamepad2.right_stick_y * .5);
+            
 
             //-----------------------------------------------------------------------------------
 

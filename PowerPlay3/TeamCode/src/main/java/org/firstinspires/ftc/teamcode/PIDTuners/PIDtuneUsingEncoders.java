@@ -65,6 +65,7 @@ public class PIDtuneUsingEncoders extends OpMode {
         telemetry.addData("leftBarPos", leftBarPos);
         telemetry.addData("rightBarPos", rightBarPos);
         telemetry.addData("PID", fourBarLeft.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION));
+        telemetry.addData("PIDVelo", fourBarLeft.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
 
         telemetry.addData("target", target);
 
