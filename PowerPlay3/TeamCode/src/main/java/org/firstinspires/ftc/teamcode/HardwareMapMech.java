@@ -27,7 +27,7 @@ public class HardwareMapMech {
 
     public static int DEFAULTSLIDEPOS = 500;
     public static int DEFAULTFOURBARPOS = 0;
-    public static int STACK = 0; //U side
+    public static int STACK = 1000; //U side
 
 
 
@@ -114,5 +114,17 @@ public class HardwareMapMech {
         intakeLeft = hwMap.get(CRServo.class, "intakeLeft");
         intakeRight = hwMap.get(CRServo.class, "intakeRight");
         intakeRight.setDirection(CRServo.Direction.REVERSE);
+    }
+
+    public void intakeIn(double power) {
+        intakeLeft.setPower(power);
+        intakeRight.setPower(power);
+    }
+    public void HIGHJUNCTIONU() {
+        slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU);
+        slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU);
+        fourBarLeft.setTargetPosition(FOURBARUSIDE);
+        fourBarRight.setTargetPosition(FOURBARUSIDE);
+        intakeIn(.05);
     }
 }

@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.HardwareMapMech.powerVariable;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorLeft;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorRight;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,7 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//88@Disabled
+@Disabled
 @TeleOp(name = "Slide/Servo Position Test", group = "Testing")
 
 

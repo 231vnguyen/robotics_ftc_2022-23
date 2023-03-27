@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.PIDTuners;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
+@Disabled
 @TeleOp
 public class MaxVeloTuner extends LinearOpMode {
     DcMotorEx motor;
