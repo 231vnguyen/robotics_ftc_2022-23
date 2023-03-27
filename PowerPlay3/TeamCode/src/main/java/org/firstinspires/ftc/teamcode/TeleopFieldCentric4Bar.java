@@ -481,9 +481,6 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                 case STACK_POSITION_INTAKE:
                     slideMotorLeft.setTargetPosition(STACK);
                     slideMotorRight.setTargetPosition(STACK);
-                    fourBarLeft.setTargetPosition(130);
-                    fourBarRight.setTargetPosition(130);
-
                     intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
