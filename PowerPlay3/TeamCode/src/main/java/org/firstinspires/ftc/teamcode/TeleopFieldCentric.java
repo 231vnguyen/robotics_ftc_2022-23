@@ -1,5 +1,7 @@
-package org.firstinspires.ftc.teamcode.Archive;
+package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -8,12 +10,19 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//hjhkhujkh
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+
+/**
+ * This opmode demonstrates how one would implement field centric control using
+ * `SampleMecanumDrive.java`. This file is essentially just `TeleOpDrive.java` with the addition of
+ * field centric control. To achieve field centric control, the only modification one needs is to
+ * rotate the input vector by the current heading before passing it into the inverse kinematics.
+ * <p>
+ * See lines 42-57.
+ */
 @Disabled
-@TeleOp(name = "ResetTicksPP", group = "Testing")
-
-
-public class TeleopModePP extends LinearOpMode {
+@TeleOp(name = "TestFieldCentric", group = "Testing")
+public class TeleopFieldCentric extends LinearOpMode {
 
 
     //static values
@@ -22,7 +31,7 @@ public class TeleopModePP extends LinearOpMode {
     private final double wheelDiameter = 3.77953;
     private final double botRotationSpeed = .9; //to match rotation with driving
     private final double wheelMaxVelocity = 1;
-    private final double maxSlideTicks = 384.5 * 3.5;
+    private final double maxSlideTicks = 3095;
     private final double maxSlideVelocity = wheelMotorRPM * wheelMotorTicks / 60;
     private final double spinnyTicks = 537.7;
     private final double maxSpinnyVelocity = 312 * spinnyTicks / 60;
@@ -62,6 +71,13 @@ public class TeleopModePP extends LinearOpMode {
     boolean slideMoving = false;
 
 
+    private double GROUNDJUNCTION = 0;
+    private double LOWJUNCTION = 1211;
+    private double MIDDLEJUNCTION = 2085;
+    private double HIGHJUNCTION = 2893;
+    int slidePositionCurrent = 0;
+
+
     //create general variables
     private double gamepad1LY;
     private double gamepad1LX;
@@ -71,40 +87,22 @@ public class TeleopModePP extends LinearOpMode {
 //    private ElapsedTime spinnyTime = new ElapsedTime();
     private ElapsedTime autoIntakeTime = new ElapsedTime();
 
-    //create motor/servo objects
-    private DcMotor flMotor;
-    private DcMotor frMotor;
-    private DcMotor blMotor;
-    private DcMotor brMotor;
 
 
-    //    private CRServo leftCarousel;
-//    private CRServo rightCarousel;
 
+    //create motor and servo objects
 
-    private DcMotorEx slideMotor;
-
-    private CRServo intakeLeft;
-    private CRServo intakeRight;
+//    private DcMotorEx slideMotor;
+//
+//    private CRServo intakeLeft;
+//    private CRServo intakeRight;
+//    private ColorSensor color;
 
 
 
 
-    //create arm objects
 
 
-    //create arm variables
-
-
-    //arm position values
-    /*private int slidePosition = 0;
-    private final double[] slideValues = {
-            maxSlideTicks * 1, //top level
-            maxSlideTicks * .55, //shared
-            maxSlideTicks * .3, //low level
-            maxSlideTicks * .6, //middle level
-
-    };*/
     String[] slideLevel = {"Top level", "Lowest level", "Middle level", "shared shipping"};
 
 
@@ -179,72 +177,67 @@ public class TeleopModePP extends LinearOpMode {
 
 
     }
-
-    public void slideControl() {
-        if (gamepad2.cross && slidePosition > 0 && !slideMoving) {
-            //decrease position
-            slidePosition--;
-            slideMoving = true;
-        } else if (gamepad2.triangle && slidePosition < (slideValues.length - 1) && !slideMoving) {
-            //increase position
-            slidePosition++;
-            slideMoving = true;
-        } else if (!gamepad2.cross && !gamepad2.triangle && slideMoving)
-            slideMoving = false;
-
-        slideMotor.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
-
-
-    }
-
-    public void intakeIn(double power) {
-        intakeLeft.setPower(power);
-        intakeRight.setPower(power);
-    }
-
-    public void intakeOut(double power) {
-        intakeLeft.setPower(-power);
-        intakeRight.setPower(-power);
-    }
+    
+//    public void slideControl() {
+//        if (gamepad2.cross && slidePosition > 0 && !slideMoving) {
+//            //decrease position
+//            slidePosition--;
+//            slideMoving = true;
+//        } else if (gamepad2.triangle && slidePosition < (slideValues.length - 1) && !slideMoving) {
+//            //increase position
+//            slidePosition++;
+//            slideMoving = true;
+//        } else if (!gamepad2.cross && !gamepad2.triangle && slideMoving)
+//            slideMoving = false;
+//
+//        slideMotor.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
+//
+//
+//    }
+//
+//    public void intakeIn(double power) {
+//        intakeLeft.setPower(power);
+//        intakeRight.setPower(power);
+//    }
+//
+//    public void intakeOut(double power) {
+//        intakeLeft.setPower(-power);
+//        intakeRight.setPower(-power);
+//    }
 
 
     @Override
     public void runOpMode() throws InterruptedException {
+        // Initialize SampleMecanumDrive
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+        // We want to turn off velocity control for teleop
+        // Velocity control per wheel is not necessary outside of motion profiled auto
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // Retrieve our pose from the PoseStorage.currentPose static field
+        // See AutoTransferPose.java for further details
+        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 
 
         //TODO organize
         //setup driving motors
-        flMotor = hardwareMap.get(DcMotor.class, "flMotor");
-        frMotor = hardwareMap.get(DcMotor.class, "frMotor");
-        blMotor = hardwareMap.get(DcMotor.class, "blMotor");
-        brMotor = hardwareMap.get(DcMotor.class, "brMotor");
-
-
-        //motor direction
-        flMotor.setDirection(DcMotor.Direction.FORWARD);
-        frMotor.setDirection(DcMotor.Direction.REVERSE);
-        blMotor.setDirection(DcMotor.Direction.FORWARD);
-        brMotor.setDirection(DcMotor.Direction.REVERSE);
-
-        //zero power behavior
-        flMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        blMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         //armMotor encoders
-        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
-        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slideMotor.setTargetPosition(0);
-        slideMotor.setVelocity(0);
-        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        slideMotor.setDirection(DcMotorEx.Direction.REVERSE);
+//        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+////        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        slideMotor.setTargetPosition(0);
+//        slideMotor.setVelocity(0);
+//        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        slideMotor.setDirection(DcMotorEx.Direction.REVERSE);
+//
+//
+//        intakeLeft = hardwareMap.get(CRServo.class, "intakeLeft");
+//        intakeRight = hardwareMap.get(CRServo.class, "intakeRight");
+//        intakeRight.setDirection(CRServo.Direction.REVERSE);
 
-
-        intakeLeft = hardwareMap.get(CRServo.class, "intakeLeft");
-        intakeRight = hardwareMap.get(CRServo.class, "intakeRight");
-        intakeRight.setDirection(CRServo.Direction.REVERSE);
+//        color = hardwareMap.colorSensor.get("color");
 
 
 
@@ -252,52 +245,55 @@ public class TeleopModePP extends LinearOpMode {
         waitForStart();
 
 
-        slideMotor.setVelocity(maxSlideVelocity);
+//        slideMotor.setVelocity(maxSlideVelocity);
 
+        if (isStopRequested()) return;
 
-        //while loop
         while (opModeIsActive() && !isStopRequested()) {
+            // Read pose
+            Pose2d poseEstimate = drive.getPoseEstimate();
+
+            // Create a vector from the gamepad x/y inputs
+            // Then, rotate that vector by the inverse of that heading
+            Vector2d input = new Vector2d(
+                    -gamepad1.left_stick_y,
+                    -gamepad1.left_stick_x
+            ).rotated(-poseEstimate.getHeading());
+
+            // Pass in the rotated input + right stick value for rotation
+            // Rotation is not part of the rotated input thus must be passed in separately
+            drive.setWeightedDrivePower(
+                    new Pose2d(
+                            input.getX() * gearValues[activeGear],
+                            input.getY() * gearValues[activeGear],
+                            -gamepad1.right_stick_x * gearValues[activeGear] * botRotationSpeed
+                    )
+            );
+
+            if (gamepad1.options) {
+                drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
+            }
 
 
             //TODO Gamepad 1
 
 
             //update controller variables
-            gamepad1LY = gamepad1.left_stick_y;
-            gamepad1LX = gamepad1.left_stick_x;
-            gamepad1RX = gamepad1.right_stick_x;
+
 
             //event methods
             changeGears();
-//            dropdownControl();
-//            slideControl();
 
 
             //-----------------------------------------------------------------------------
             //Inverse drive with start
-            if (gamepad1.options && !inversePressed)
+/*            if (gamepad1.options && !inversePressed)
                 inverse *= -1;
-            inversePressed = gamepad1.options;
+            inversePressed = gamepad1.options;*/
 
 
             //---------------------------------------------------------------------
             //Mecanum Drivetrain Control
-            //if statement to ensure robot won't move unless control sticks are moved
-            if (Math.abs(gamepad1LY) > .05 || Math.abs(gamepad1LX) > .05 || Math.abs(gamepad1RX) > .05) {
-                //control logic: multiply by gear array for different speeds,
-                //multiply right stick movement by rotation fraction to reduce uncontrolability
-                flMotor.setPower((gearValues[activeGear] * ((gamepad1LY - gamepad1LX)) - gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
-                frMotor.setPower((gearValues[activeGear] * ((gamepad1LY + gamepad1LX)) + gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
-                blMotor.setPower((gearValues[activeGear] * ((gamepad1LY + gamepad1LX)) - gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
-                brMotor.setPower((gearValues[activeGear] * ((gamepad1LY - gamepad1LX)) + gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
-            } else {
-                flMotor.setPower(0);
-                frMotor.setPower(0);
-                blMotor.setPower(0);
-                brMotor.setPower(0);
-            }
-            //-----------------------------------------------------------------------------------
-
 
 
 
@@ -305,23 +301,24 @@ public class TeleopModePP extends LinearOpMode {
             //TODO Gamepad 2
 
 
-            switch (autointakeState) {
+         /*   switch (autointakeState) {
                 case DEFAULT_POSITION:
 
-                    slideMotor.setVelocity(maxSlideVelocity);
-                    slideMotor.setTargetPosition(400);
-
-
+//                    slideMotor.setVelocity(maxSlideVelocity);
+//                    slideMotor.setTargetPosition(403);
 
                     if (gamepad2.triangle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.HIGH_JUNCTION;
+                        slidePositionCurrent = (int) HIGHJUNCTION;
                     } else if (gamepad2.circle && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
+                        slidePositionCurrent = (int) MIDDLEJUNCTION;
                     } else if (gamepad2.cross && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.LOW_JUNCTION;
+                        slidePositionCurrent = (int) LOWJUNCTION;
                     } else if (gamepad2.right_bumper && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.INITIAL_GRAB;
@@ -330,7 +327,7 @@ public class TeleopModePP extends LinearOpMode {
                         autointakeState = AutoIntakeState.STACK_POSITION;
                     } else if (gamepad1.left_bumper) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.DROP_DEFAULT;
+                        autointakeState = AutoIntakeState.DROP;
                     }
 
 
@@ -339,19 +336,20 @@ public class TeleopModePP extends LinearOpMode {
                 case INITIAL_GRAB:
 
                     slideMotor.setTargetPosition(0);
-
+                    intakeIn(1);
                     if (gamepad2.right_bumper) {
-                        intakeIn(1);
+
                         autoIntakeTime.reset();
-                    } else if (!gamepad2.right_bumper){
+                    } else if (!gamepad2.right_bumper) {
 
                         if (autoIntakeTime.seconds() < .1) {
-                            intakeOut(.5);
+                            intakeOut(.1);
 
                         } else if (autoIntakeTime.seconds() > .1) {
-                            intakeIn(0);
+                            intakeIn(.05);
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         }
                     }
 
@@ -359,22 +357,23 @@ public class TeleopModePP extends LinearOpMode {
 
                 case INITIAL_GRAB_STACK:
 
-                    slideMotor.setVelocity(maxSlideVelocity * .25);
                     slideMotor.setTargetPosition(0);
+                    intakeIn(1);
 
                     if (gamepad2.right_bumper) {
-                        intakeIn(1);
+
                         autoIntakeTime.reset();
-                    } else if (!gamepad2.right_bumper){
+                    } else if (!gamepad2.right_bumper) {
+                        slideMotor.setVelocity(maxSlideVelocity);
 
-                        if (autoIntakeTime.seconds() < .1) {
-                            intakeOut(.5);
+//                        if (autoIntakeTime.seconds() < .1) {
+//                            intakeOut(.5);
 
-                        } else if (autoIntakeTime.seconds() > .1) {
+//                        } else if (autoIntakeTime.seconds() > .1) {
                             intakeIn(0);
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.STACK_POSITION;
-                        }
+//                        }
                     }
 
                     break;
@@ -383,14 +382,22 @@ public class TeleopModePP extends LinearOpMode {
 
                     if (gamepad1.left_bumper) {
                         intakeOut(.6);
+                        slideMotor.setTargetPosition(slidePositionCurrent - 300);
+
                     } else if (!gamepad1.left_bumper) {
                         intakeOut(0);
+                        slideMotor.setTargetPosition(slidePositionCurrent + 300);
                     }
 
                     if (gamepad1.ps | gamepad2.ps) {
                         intakeIn(0);
                         autoIntakeTime.reset();
                         autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                        slidePositionCurrent = 403;
+                    }
+                    else if (gamepad2.right_bumper) {
+                        autoIntakeTime.reset();
+                        autointakeState = AutoIntakeState.INITIAL_GRAB;
                     }
 
 
@@ -401,8 +408,9 @@ public class TeleopModePP extends LinearOpMode {
                     if (gamepad1.left_bumper) {
                         intakeOut(.6);
                     } else if (!gamepad1.left_bumper) {
-                        intakeOut(0);
+                        intakeOut(0.05);
                         autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                        slidePositionCurrent = 403;
                     }
 
                 case DROP_STACKED:
@@ -410,72 +418,74 @@ public class TeleopModePP extends LinearOpMode {
                     if (gamepad1.left_bumper) {
                         intakeOut(.6);
                     } else if (!gamepad1.left_bumper) {
-                        intakeOut(0);
+                        intakeOut(0.05);
                         autointakeState = AutoIntakeState.STACK_POSITION;
                     }
-
-
 
 
                     break;
 
 
                 case STACK_POSITION:
-                    slideMotor.setTargetPosition(980); //TODO adjust
-                    intakeIn(.1);
+                    slideMotor.setTargetPosition(807);
+                    intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
-
 
 
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
+                            slidePositionCurrent = (int) MIDDLEJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
+                            slidePositionCurrent = (int) LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP_STACKED;
                         } else if (gamepad2.right_bumper) {
                             autoIntakeTime.reset();
-                            slideMotor.setVelocity(maxSlideVelocity * .25);
                             autointakeState = AutoIntakeState.INITIAL_GRAB_STACK;
+                            slideMotor.setVelocity(maxSlideVelocity * .5);
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
+                            slidePositionCurrent = (int) HIGHJUNCTION;
                         }
                     }
-
 
 
                     break;
 
 
                 case HIGH_JUNCTION:
-                    slideMotor.setTargetPosition(3969);
-                    intakeIn(.1);
+                    slideMotor.setTargetPosition((int) HIGHJUNCTION);
+                    intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
-
 
 
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
+                            slidePositionCurrent = (int) MIDDLEJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
+                            slidePositionCurrent = (int) LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
-                        }  else if (gamepad2.square) {
+                        } else if (gamepad2.square) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.STACK_POSITION;
                         }
@@ -485,22 +495,24 @@ public class TeleopModePP extends LinearOpMode {
                     break;
 
                 case MIDDLE_JUNCTION:
-                    slideMotor.setTargetPosition(2893);
-                    intakeIn(.1);
+                    slideMotor.setTargetPosition((int) MIDDLEJUNCTION);
+                    intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
-
 
 
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
+                            slidePositionCurrent = (int) HIGHJUNCTION;
                         } else if (gamepad2.cross) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.LOW_JUNCTION;
+                            slidePositionCurrent = (int) LOWJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -514,22 +526,24 @@ public class TeleopModePP extends LinearOpMode {
                     break;
 
                 case LOW_JUNCTION:
-                    slideMotor.setTargetPosition(1749);
-                    intakeIn(.1);
+                    slideMotor.setTargetPosition((int) LOWJUNCTION);
+                    intakeIn(.05);
 
                     if (autoIntakeTime.seconds() > .1) {
-
 
 
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
+                            slidePositionCurrent = (int) MIDDLEJUNCTION;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
+                            slidePositionCurrent = (int) HIGHJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -544,22 +558,23 @@ public class TeleopModePP extends LinearOpMode {
 
                 case GROUND_JUNCTION:
 
-                    slideMotor.setTargetPosition(0);
+                    slideMotor.setTargetPosition(134);
                     intakeIn(.1);
 
                     if (autoIntakeTime.seconds() > .1) {
 
-
-
                         if (gamepad1.ps | gamepad2.ps) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DEFAULT_POSITION;
+                            slidePositionCurrent = 403;
                         } else if (gamepad2.circle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.MIDDLE_JUNCTION;
+                            slidePositionCurrent = (int) MIDDLEJUNCTION;
                         } else if (gamepad2.triangle) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.HIGH_JUNCTION;
+                            slidePositionCurrent = (int) HIGHJUNCTION;
                         } else if (gamepad1.left_bumper) {
                             autoIntakeTime.reset();
                             autointakeState = AutoIntakeState.DROP;
@@ -571,32 +586,27 @@ public class TeleopModePP extends LinearOpMode {
 
                     break;
 
+            }*/
 
+            // Update everything. Odometry. Etc.
+            drive.update();
 
-
-
-
-
-
-
-            }
-
-//            telemetry.addData("Flicky Position:", flicky.getPosition());
+            // Print pose to telemetry
+            telemetry.addData("State:", autointakeState);
             telemetry.addData("Slide Position:", slidePosition);
-            telemetry.addData("Slide Ticks", slideMotor.getTargetPosition());
+//            telemetry.addData("Slide Ticks", slideMotor.getTargetPosition());
             telemetry.addData("Slide Value", slideValues[slidePosition]);
-
+            telemetry.addData("x", poseEstimate.getX());
+            telemetry.addData("y", poseEstimate.getY());
+            telemetry.addData("heading", poseEstimate.getHeading());
+//            telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) color).getDistance(DistanceUnit.CM));
+//            telemetry.addLine()
+//                    .addData("Red", color.red())
+//                    .addData("Green", color.green())
+//                    .addData("Blue", color.blue());
+//            telemetry.addData("Alpha", color.alpha());
 
             telemetry.update();
-
         }
-
-
     }
 }
-
-
-
-
-
-

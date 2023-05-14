@@ -5,6 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d67f1c8-dccd-4b70-a512-27dd7d6a42c2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/PowerPlay3.0.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PowerPlay3.0.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PowerPlay3/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/PowerPlay3/.idea/misc.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -29,7 +31,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "cidr.known.project.marker": "true",
-    "last_opened_file_path": "C:/Users/Robotics/Downloads/FtcRobotController-8.1.1 (1)/FtcRobotController-8.1.1"
+    "last_opened_file_path": "C:/Users/231vn/OneDrive/Documents/PowerPlay3.0/PowerPlay3",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -42,5 +45,16 @@
       <updated>1677189145138</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

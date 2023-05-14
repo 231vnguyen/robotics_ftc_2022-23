@@ -1,16 +1,13 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.DEFAULTFOURBARPOS;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.DEFAULTSLIDEPOS;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.FOURBAROUT;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.FOURBARUSIDE;
-
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTIONSLIDEOUT;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.HIGHJUNCTIONSLIDEU;
-
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTIONSLIDEOUT;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.LOWJUNCTIONSLIDEU;
-
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTIONSLIDEOUT;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.MIDDLEJUNCTIONSLIDEU;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.STACK;
@@ -21,7 +18,6 @@ import static org.firstinspires.ftc.teamcode.HardwareMapMech.intakeRight;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.powerVariable;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorLeft;
 import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorRight;
-import static org.firstinspires.ftc.teamcode.HardwareMapMech.target;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -30,11 +26,10 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.HardwareMapMech;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 /**
@@ -45,9 +40,14 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  * <p>
  * See lines 42-57.
  */
-
+@Disabled
 @TeleOp(group = "advanced")
-public class TeleopFieldCentric4Bar extends LinearOpMode {
+public class Teleop4BarNoOdometry extends LinearOpMode {
+
+    private DcMotor flMotor;
+    private DcMotor frMotor;
+    private DcMotor blMotor;
+    private DcMotor brMotor;
 
 
     //static values
@@ -66,7 +66,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
     //gear change variables
     private boolean bumpersPressed = false;
-    private int activeGear = 4;//values 1 - 3
+    private int activeGear = 2;//values 1 - 3
 
 
     //inverse drive variables
@@ -237,17 +237,25 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // Initialize SampleMecanumDrive
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        flMotor = hardwareMap.get(DcMotor.class, "flMotor");
+        frMotor = hardwareMap.get(DcMotor.class, "frMotor");
+        blMotor = hardwareMap.get(DcMotor.class, "blMotor");
+        brMotor = hardwareMap.get(DcMotor.class, "brMotor");
+
+        //motor direction
+        flMotor.setDirection(DcMotor.Direction.FORWARD);
+        frMotor.setDirection(DcMotor.Direction.REVERSE);
+        blMotor.setDirection(DcMotor.Direction.REVERSE);
+        brMotor.setDirection(DcMotor.Direction.FORWARD);
+
+        //zero power behavior
+        flMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        blMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        // We want to turn off velocity control for teleop
-        // Velocity control per wheel is not necessary outside of motion profiled auto
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // Retrieve our pose from the PoseStorage.currentPose static field
-        // See AutoTransferPose.java for further details
-        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 
 
         //TODO organize
@@ -266,33 +274,42 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive() && !isStopRequested()) {
-            // Read pose
-            Pose2d poseEstimate = drive.getPoseEstimate();
 
-            // Create a vector from the gamepad x/y inputs
-            // Then, rotate that vector by the inverse of that heading
-            Vector2d input = new Vector2d(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x
-            ).rotated(-poseEstimate.getHeading());
-
-            // Pass in the rotated input + right stick value for rotation
-            // Rotation is not part of the rotated input thus must be passed in separately
-            drive.setWeightedDrivePower(
-                    new Pose2d(
-                            input.getX() * gearValues[activeGear],
-                            input.getY() * gearValues[activeGear],
-                            -gamepad1.right_stick_x * gearValues[activeGear] * botRotationSpeed
-                    )
-            );
-
-            if (gamepad1.options) {
-                drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
-            }
 
 
             //TODO Gamepad 1
 
+
+            //update controller variables
+            gamepad1LY = gamepad1.left_stick_y;
+            gamepad1LX = gamepad1.left_stick_x;
+            gamepad1RX = gamepad1.right_stick_x;
+
+
+
+            //-----------------------------------------------------------------------------
+            //Inverse drive with start
+            if (gamepad1.options && !inversePressed)
+                inverse *= -1;
+            inversePressed = gamepad1.options;
+
+
+            //---------------------------------------------------------------------
+            //Mecanum Drivetrain Control
+            //if statement to ensure robot won't move unless control sticks are moved
+            if (Math.abs(gamepad1LY) > .05 || Math.abs(gamepad1LX) > .05 || Math.abs(gamepad1RX) > .05) {
+                //control logic: multiply by gear array for different speeds,
+                //multiply right stick movement by rotation fraction to reduce uncontrolability
+                flMotor.setPower((gearValues[activeGear] * (inverse *(-gamepad1LY + gamepad1LX)) + gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
+                frMotor.setPower((gearValues[activeGear] * (inverse * (-gamepad1LY - gamepad1LX)) - gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
+                blMotor.setPower((gearValues[activeGear] * (inverse * (-gamepad1LY - gamepad1LX)) + gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
+                brMotor.setPower((gearValues[activeGear] * (inverse  * (-gamepad1LY + gamepad1LX)) - gearValues[activeGear] * botRotationSpeed * gamepad1RX) * wheelMaxVelocity);
+            } else {
+                flMotor.setPower(0);
+                frMotor.setPower(0);
+                blMotor.setPower(0);
+                brMotor.setPower(0);
+            }
 
             //update controller variables
 
@@ -353,7 +370,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         autointakeState = AutoIntakeState.STACK_POSITION_INTAKE;
                     } else if (gamepad1.left_bumper) {
                         autoIntakeTime.reset();
-                        autointakeState = AutoIntakeState.DROP_DEFAULT;
+                        autointakeState = AutoIntakeState.DROP;
                     }
                     //Fourbar for other side
                     else if (gamepad2.dpad_up && autointakeState == AutoIntakeState.DEFAULT_POSITION) {
@@ -400,8 +417,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
                 case INITIAL_GRAB_STACK:
 
-//                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
-//                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
                     slideMotorLeft.setTargetPosition(0);
                     slideMotorRight.setTargetPosition(0);
                     intakeIn(1);
@@ -464,7 +481,6 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                         autointakeState = AutoIntakeState.DEFAULT_POSITION;
                         slidePositionCurrent = DEFAULTSLIDEPOS;
                     }
-                    break;
 
                 case DROP_STACKED:
 
@@ -482,8 +498,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
                 case STACK_POSITION_INTAKE:
                     slideMotorLeft.setTargetPosition(STACK);
                     slideMotorRight.setTargetPosition(STACK);
-                    fourBarLeft.setTargetPosition(DEFAULTFOURBARPOS);
-                    fourBarRight.setTargetPosition(DEFAULTFOURBARPOS);
+                    fourBarLeft.setTargetPosition(130);
+                    fourBarRight.setTargetPosition(130);
 
                     intakeIn(.05);
 
@@ -534,8 +550,8 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
 
 
                 case HIGH_JUNCTION_INTAKE:
-                    slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU+150);
-                    slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU+150);
+                    slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU);
+                    slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU);
                     fourBarLeft.setTargetPosition(FOURBARUSIDE);
                     fourBarRight.setTargetPosition(FOURBARUSIDE);
                     intakeIn(.05);
@@ -815,7 +831,7 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
             }
 
             // Update everything. Odometry. Etc.
-            drive.update();
+
 
             // Print pose to telemetry
             telemetry.addData("State:", autointakeState);
@@ -825,10 +841,6 @@ public class TeleopFieldCentric4Bar extends LinearOpMode {
             telemetry.addData("Right Slide Target ", slideMotorRight.getTargetPosition());
             telemetry.addData("Right Slide Current", slideMotorRight.getCurrentPosition());
             telemetry.addData("Slide Value", slideValues[slidePosition]);
-            telemetry.addData("x", poseEstimate.getX());
-            telemetry.addData("y", poseEstimate.getY());
-            telemetry.addData("heading", poseEstimate.getHeading());
-            telemetry.addData("Active Gear", activeGear);
 //            telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) color).getDistance(DistanceUnit.CM));
 //            telemetry.addLine()
 //                    .addData("Red", color.red())

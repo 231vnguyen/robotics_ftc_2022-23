@@ -27,19 +27,19 @@ public class HardwareMapMech {
 
     public static int DEFAULTSLIDEPOS = 500;
     public static int DEFAULTFOURBARPOS = 0;
-    public static int STACK = 1000; //U side
+    public static int STACK = 1250; //U side
 
 
 
 //    public static int GROUNDJUNCTIONSLIDEU = 0;
     public static int LOWJUNCTIONSLIDEU = 100;
-    public static int MIDDLEJUNCTIONSLIDEU = 1250;
-    public static int HIGHJUNCTIONSLIDEU = 2400;
+    public static int MIDDLEJUNCTIONSLIDEU = 1450;
+    public static int HIGHJUNCTIONSLIDEU = 2550;
 
 //    public static int GROUNDJUNCTIONSLIDEO = 0;
     public static int LOWJUNCTIONSLIDEOUT = 200;
-    public static int MIDDLEJUNCTIONSLIDEOUT = 1400;
-    public static int HIGHJUNCTIONSLIDEOUT = 2500;
+    public static int MIDDLEJUNCTIONSLIDEOUT = 1600;
+    public static int HIGHJUNCTIONSLIDEOUT = 2700;
 
 
 
@@ -121,10 +121,18 @@ public class HardwareMapMech {
         intakeRight.setPower(power);
     }
     public void HIGHJUNCTIONU() {
-        slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU);
-        slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU);
+        slideMotorLeft.setTargetPosition(HIGHJUNCTIONSLIDEU+150);
+        slideMotorRight.setTargetPosition(HIGHJUNCTIONSLIDEU+150);
         fourBarLeft.setTargetPosition(FOURBARUSIDE);
         fourBarRight.setTargetPosition(FOURBARUSIDE);
+        intakeIn(.05);
+    }
+
+    public void MIDDLEJUNCTIONOUT() {
+        slideMotorLeft.setTargetPosition(MIDDLEJUNCTIONSLIDEOUT+300);
+        slideMotorRight.setTargetPosition(MIDDLEJUNCTIONSLIDEOUT+300);
+        fourBarLeft.setTargetPosition(FOURBAROUT+20);
+        fourBarRight.setTargetPosition(FOURBAROUT+20);
         intakeIn(.05);
     }
 }

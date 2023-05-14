@@ -1,17 +1,26 @@
-package org.firstinspires.ftc.teamcode.Archive;
+package org.firstinspires.ftc.teamcode;
+
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.fourBarLeft;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.fourBarRight;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.powerVariable;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorLeft;
+import static org.firstinspires.ftc.teamcode.HardwareMapMech.slideMotorRight;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Disabled
-@TeleOp(name = "GearChangeTeleop", group = "Testing")
+//@Disabled
+@TeleOp(name = "ResetEncoders/Test", group = "Testing")
 
 
-public class TeleOpTest extends LinearOpMode {
+public class ResetEncoders_andTest extends LinearOpMode {
+
+    HardwareMapMech robot = new HardwareMapMech();
 
 
     //static values
@@ -20,14 +29,10 @@ public class TeleOpTest extends LinearOpMode {
     private final double wheelDiameter = 3.77953;
     private final double botRotationSpeed = .9; //to match rotation with driving
     private final double wheelMaxVelocity = 1;
-    private final double maxSlideTicks = 384.5 * 3.5;
+
     private final double maxSlideVelocity = wheelMotorRPM * wheelMotorTicks / 60;
     private final double spinnyTicks = 537.7;
     private final double maxSpinnyVelocity = 312 * spinnyTicks / 60;
-
-
-
-
 
 
     //gear change variables
@@ -57,6 +62,7 @@ public class TeleOpTest extends LinearOpMode {
     };
     boolean dropdownMoving = false;
 
+    private final double maxSlideTicks = 384.5 * 3.5;
     private int slidePosition = 0;
     private final double[] slideValues = {
             0, .1, .2, .3, .4,  .5, .6, .7, .85, .9, 1, 1.1, 1.2, 1.3, 1.4
@@ -64,6 +70,18 @@ public class TeleOpTest extends LinearOpMode {
             2.8, 2.9, 3.0, 3.1
     };
     boolean slideMoving = false;
+
+
+    private final double maxFourBarTicks = 900;
+    private int fourBarPosition = 0;
+    boolean fourBarMoving = false;
+    private final double[] fourBarValues = {
+            0, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95,
+            1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7,
+            2.8, 2.9, 3.0, 3.1
+    };
+
+
 
 
     //create general variables
@@ -80,35 +98,11 @@ public class TeleOpTest extends LinearOpMode {
     private DcMotor frMotor;
     private DcMotor blMotor;
     private DcMotor brMotor;
-//    private DcMotor testMotor;
-
-
-    //    private CRServo leftCarousel;
-//    private CRServo rightCarousel;
-
-
-//    private DcMotorEx slideMotor;
 
 
 
 
 
-
-    //create arm objects
-
-
-    //create arm variables
-
-
-    //arm position values
-    /*private int slidePosition = 0;
-    private final double[] slideValues = {
-            maxSlideTicks * 1, //top level
-            maxSlideTicks * .55, //shared
-            maxSlideTicks * .3, //low level
-            maxSlideTicks * .6, //middle level
-
-    };*/
     String[] slideLevel = {"Top level", "Lowest level", "Middle level", "shared shipping"};
 
 
@@ -188,7 +182,7 @@ public class TeleOpTest extends LinearOpMode {
 
     }
 
-    /*public void slideControl() {
+    public void slideControl() {
         if (gamepad2.cross && slidePosition > 0 && !slideMoving) {
             //decrease position
             slidePosition--;
@@ -200,10 +194,29 @@ public class TeleOpTest extends LinearOpMode {
         } else if (!gamepad2.cross && !gamepad2.triangle && slideMoving)
             slideMoving = false;
 
-        slideMotor.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
+        slideMotorLeft.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
+        slideMotorRight.setTargetPosition((int) (slideValues[slidePosition] * maxSlideTicks));
 
 
-    }*/
+    }
+
+    public void fourBarControl() {
+        if (gamepad1.dpad_up && fourBarPosition > 0 && !fourBarMoving) {
+            //decrease position
+            fourBarPosition--;
+            fourBarMoving = true;
+        } else if (gamepad1.dpad_down && fourBarPosition < (fourBarValues.length - 1) && !fourBarMoving) {
+            //increase position
+            fourBarPosition++;
+            fourBarMoving = true;
+        } else if (!gamepad1.dpad_up && !gamepad1.dpad_down && fourBarMoving)
+            fourBarMoving = false;
+
+        fourBarLeft.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxFourBarTicks));
+        fourBarRight.setTargetPosition((int) (fourBarValues[fourBarPosition] * maxFourBarTicks));
+
+
+    }
 
 
 
@@ -218,7 +231,6 @@ public class TeleOpTest extends LinearOpMode {
         frMotor = hardwareMap.get(DcMotor.class, "frMotor");
         blMotor = hardwareMap.get(DcMotor.class, "blMotor");
         brMotor = hardwareMap.get(DcMotor.class, "brMotor");
-//        testMotor = hardwareMap.get(DcMotor.class, "testMotor");
 
 
 
@@ -234,17 +246,15 @@ public class TeleOpTest extends LinearOpMode {
         blMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         brMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
-        //armMotor encoders
-//        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
-//        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        slideMotor.setTargetPosition(0);
-//        slideMotor.setVelocity(0);
-//        slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        slideMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        fourBarLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        fourBarRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
 
+
+        robot.init(hardwareMap);
 
 
 
@@ -252,7 +262,11 @@ public class TeleOpTest extends LinearOpMode {
         waitForStart();
 
 
-//        slideMotor.setVelocity(maxSlideVelocity);
+        slideMotorLeft.setVelocity(maxSlideVelocity);
+        slideMotorRight.setVelocity(maxSlideVelocity);
+        fourBarRight.setVelocity(maxSlideVelocity * powerVariable);
+        fourBarLeft.setVelocity(maxSlideVelocity * powerVariable);
+
 
 
 
@@ -273,8 +287,9 @@ public class TeleOpTest extends LinearOpMode {
 
             //event methods
             changeGears();
-            dropdownControl();
-//            slideControl();
+//            dropdownControl();
+            slideControl();
+            fourBarControl();
 
 
             //-----------------------------------------------------------------------------
@@ -301,7 +316,7 @@ public class TeleOpTest extends LinearOpMode {
                 brMotor.setPower(0);
             }
 
-//            testMotor.setPower(gamepad2.right_stick_y * .5);
+            
 
             //-----------------------------------------------------------------------------------
 
@@ -354,7 +369,7 @@ public class TeleOpTest extends LinearOpMode {
 
 
                 telemetry.addData("Slide Position:", slidePosition);
-//                telemetry.addData("Slide Ticks", slideMotor.getTargetPosition());
+                telemetry.addData("Slide Ticks", slideMotorLeft.getTargetPosition());
                 telemetry.addData("Slide Value", slideValues[slidePosition]);
 
 
